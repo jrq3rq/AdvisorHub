@@ -7,7 +7,7 @@ const BusinessEntityChatbot = ({ onClose }) => {
   const chatContainerRef = useRef(null);
   const [messages, setMessages] = useState([]);
   const [visitedNodes, setVisitedNodes] = useState(new Set());
-  const [currentNodeId, setCurrentNodeId] = useState(null);
+  const [currentNodeId, setCurrentNodeId] = useState(null); // Remove if not needed elsewhere
   const [isLoading, setIsLoading] = useState(false);
   const [isFileSaverLoaded, setIsFileSaverLoaded] = useState(false);
 
@@ -41,6 +41,15 @@ const BusinessEntityChatbot = ({ onClose }) => {
       chatContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, [messages]);
+
+  // Helper function for formatting option labels
+  const formatOptionLabel = (optionId) => {
+    return optionId
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase())
+      .replace("Ip", "IP")
+      .replace("D O", "D&O");
+  };
 
   // Comprehensive conversation nodes for business entity selection
   const conversationNodes = {
@@ -133,7 +142,7 @@ const BusinessEntityChatbot = ({ onClose }) => {
 1. What are annual compliance requirements in your state? *(Corporations need annual reports.)*
 2. Are there industry licensing/regulatory approvals needed? *(Certain industries require specific licenses.)*
 3. Will you operate in multiple states/countries? *(Requires foreign qualification.)*`,
-      options: ["compliance_details", "back_to_main", "start", "exit"],
+      options: ["compliance_details", "start", "exit"],
     },
     ip_ownership: {
       response: `**Intellectual Property and Ownership Structure**. Consider these questions:
@@ -141,7 +150,7 @@ const BusinessEntityChatbot = ({ onClose }) => {
 1. Who owns key IP, trademarks, software (entity vs. founders)? *(Entity ownership is standard.)*
 2. Do you plan IP licensing between entities? *(Holding companies may be useful.)*
 3. Will ownership % differ from voting rights/profit allocation? *(LLCs/partnerships allow customization.)*`,
-      options: ["ip_details", "back_to_main", "start", "exit"],
+      options: ["ip_details", "start", "exit"],
     },
     succession_planning: {
       response: `**Succession, Estate, and Asset Planning**. Consider these questions:
@@ -149,14 +158,14 @@ const BusinessEntityChatbot = ({ onClose }) => {
 1. Should the entity simplify estate planning/transfer to family? *(LLCs/partnerships can simplify.)*
 2. Planning multiple entities for asset protection/tax efficiency? *(Holding structures can help.)*
 3. How will ownership transfer during exit, divorce, inheritance? *(Entity type affects valuation.)*`,
-      options: ["succession_details", "back_to_main", "start", "exit"],
+      options: ["succession_details", "start", "exit"],
     },
     insurance_risk: {
       response: `**Insurance and Risk Mitigation**. Consider these questions:
 
 1. What insurance policies will you need (liability, D&O, etc.)? *(All entities need general liability.)*
 2. Does entity type impact coverage availability? *(Corporations may need additional policies.)*`,
-      options: ["insurance_details", "back_to_main", "start", "exit"],
+      options: ["insurance_details", "start", "exit"],
     },
     administrative_concerns: {
       response: `**Administrative and Practical Concerns**. Consider these questions:
@@ -164,14 +173,14 @@ const BusinessEntityChatbot = ({ onClose }) => {
 1. What's your budget for formation/maintenance costs? *(Sole proprietorships are cheapest.)*
 2. How much flexibility do you need for bookkeeping/tax filings? *(Corporations require more records.)*
 3. Do you prefer simplicity/control or formal governance? *(Sole proprietorships offer simplicity.)*`,
-      options: ["admin_details", "back_to_main", "start", "exit"],
+      options: ["admin_details", "start", "exit"],
     },
     strategic_ethical: {
       response: `**Strategic or Ethical Considerations**. Consider these questions:
 
 1. Do you want B Corp, nonprofit, or benefit corporation status? *(Aligns with social missions.)*
 2. Does your model include community ownership or open-source? *(Cooperatives suit community models.)*`,
-      options: ["strategic_details", "back_to_main", "start", "exit"],
+      options: ["strategic_details", "start", "exit"],
     },
     employment_hr: {
       response: `**Employment and HR Considerations**. Think about how you’ll hire, compensate, and manage employees:
@@ -181,7 +190,7 @@ const BusinessEntityChatbot = ({ onClose }) => {
 3. Do you plan to set up payroll or HR systems? *(Corporations and LLCs simplify compliance.)*
 4. Are you concerned about employment taxes and worker classification? *(Entity type affects liability and taxes.)*
 5. Will you issue equity-based compensation (options, RSUs)? *(C corps best for stock-based incentives.)*`,
-      options: ["back_to_main", "start", "exit"],
+      options: ["start", "exit"],
     },
     governance_records: {
       response: `**Governance and Record-Keeping**. Consider:
@@ -191,7 +200,7 @@ const BusinessEntityChatbot = ({ onClose }) => {
 3. How will you handle voting, resolutions, or ownership changes?
 4. Who will serve as registered agent or maintain compliance calendar?
 5. Will you store records digitally or in physical form?`,
-      options: ["back_to_main", "start", "exit"],
+      options: ["start", "exit"],
     },
     international_ops: {
       response: `**International and Cross-Border Operations**. Consider:
@@ -200,75 +209,75 @@ const BusinessEntityChatbot = ({ onClose }) => {
 2. Are you planning foreign subsidiaries or sales abroad?
 3. Will you need international tax compliance or transfer pricing planning?
 4. Do you expect to repatriate profits or hold IP offshore?`,
-      options: ["back_to_main", "start", "exit"],
+      options: ["start", "exit"],
     },
     about_tool: {
       response: "This advisor offers educational guidance only—not legal or tax advice. It’s designed to help you clarify priorities before consulting professionals.",
-      options: ["back_to_main", "start", "exit"],
+      options: ["start", "exit"],
     },
     recommendation_prompt: {
       response: "Would you like entity recommendations based on your answers so far?",
-      options: ["get_recommendation", "back_to_main", "start", "exit"],
+      options: ["get_recommendation", "start", "exit"],
     },
     ownership_details: {
       response:
         "Based on ownership needs:\n- **Single owner**: Sole proprietorship (simplest)\n- **Multiple owners**: Partnership, S corp (limited), or C corp\n- **Future investors/non-U.S. owners**: C corp preferred\n- **Employee equity**: C corp or LLC (S corp has restrictions)\n\nReady to explore another area?",
-      options: ["back_to_main", "start", "exit"],
+      options: ["start", "exit"],
     },
     liability_details: {
       response:
         "Liability protection summary:\n- **No protection**: Sole proprietorship, general partnership\n- **Limited liability**: Limited partnership, S corp, C corp\n- **High risk industries**: Consider corporations\n- **Personal assets to protect**: Choose limited liability entities\n\nWhat else would you like to explore?",
-      options: ["back_to_main", "start", "exit"],
+      options: ["start", "exit"],
     },
     tax_details: {
       response:
         "Tax treatment overview:\n- **Pass-through (personal taxes)**: Sole prop, partnership, S corp\n- **Corporate taxes**: C corp (double taxation risk)\n- **Self-employment taxes**: Sole prop and partnerships\n- **Loss deductions**: Pass-through entities\n\nConsider consulting a tax professional for your specific situation.",
-      options: ["back_to_main", "start", "exit"],
+      options: ["start", "exit"],
     },
     funding_details: {
       response:
         "Funding considerations:\n- **Venture capital/IPO**: C corporation best\n- **Bank loans**: Most entities qualify\n- **Many shareholders**: C corp only\n- **Stock options**: C corp most flexible\n\nGrowth plans significantly impact entity choice.",
-      options: ["back_to_main", "start", "exit"],
+      options: ["start", "exit"],
     },
     management_details: {
       response:
         "Management complexity:\n- **Simplest**: Sole proprietorship\n- **Moderate**: Partnership\n- **Formal**: S corp, C corp (boards, meetings)\n- **State variations**: Check specific requirements\n\nBalance control vs. structure needs.",
-      options: ["back_to_main", "start", "exit"],
+      options: ["start", "exit"],
     },
     future_details: {
       response:
         "Future planning:\n- **Long-term growth**: C corp\n- **Family business**: Consider succession-friendly structures\n- **Exit strategy**: Entity impacts sale/transfer ease\n- **Mission-driven**: Explore benefit corporation options\n\nThink 5-10 years ahead.",
-      options: ["back_to_main", "start", "exit"],
+      options: ["start", "exit"],
     },
     compliance_details: {
       response:
         "Compliance varies by entity:\n- **Sole prop**: Minimal\n- **Partnership**: Agreement + basic filings\n- **Corporations**: Annual reports, meetings, registered agent\n- **Multi-state**: Foreign qualification needed\n\nBudget for ongoing compliance costs.",
-      options: ["back_to_main", "start", "exit"],
+      options: ["start", "exit"],
     },
     ip_details: {
       response:
         "IP ownership:\n- **Entity-owned**: Standard for most structures\n- **Founder-owned**: May complicate liability protection\n- **Multiple entities**: Consider holding company structure\n- **Custom agreements**: Partnerships/LLCs offer flexibility\n\nClear IP ownership prevents future disputes.",
-      options: ["back_to_main", "start", "exit"],
+      options: ["start", "exit"],
     },
     succession_details: {
       response:
         "Succession planning:\n- **Family transfer**: LLC/partnership may be simpler\n- **Asset protection**: Multiple entities structure\n- **Valuation**: Entity type affects transfer taxes\n- **Trust integration**: Consider estate planning compatibility\n\nPlan for ownership transitions early.",
-      options: ["back_to_main", "start", "exit"],
+      options: ["start", "exit"],
     },
     insurance_details: {
       response:
         "Insurance considerations:\n- **All entities**: General liability essential\n- **Corporations**: May need D&O insurance\n- **High-risk**: Professional liability/E&O\n- **Key person**: Consider for critical founders\n\nEntity choice can impact insurance costs/coverage.",
-      options: ["back_to_main", "start", "exit"],
+      options: ["start", "exit"],
     },
     admin_details: {
       response:
         "Administrative burden:\n- **Lowest cost**: Sole proprietorship\n- **Moderate**: Partnership\n- **Higher**: Corporations (filings, meetings)\n- **Bookkeeping**: Corporations require more separation\n\nBalance cost vs. protection/features needed.",
-      options: ["back_to_main", "start", "exit"],
+      options: ["start", "exit"],
     },
     strategic_details: {
       response:
         "Strategic considerations:\n- **Social mission**: B Corp, benefit corporation\n- **Community ownership**: Consider cooperative structures\n- **Open source**: May need special licensing\n- **Tokenization**: Emerging structures/DAOs\n\nAlign entity with your values and model.",
-      options: ["back_to_main", "start", "exit"],
+      options: ["start", "exit"],
     },
     get_recommendation: {
       response:
@@ -303,9 +312,7 @@ const BusinessEntityChatbot = ({ onClose }) => {
     const userMessage = {
       id: uuidv4(),
       role: "user",
-      content:
-        currentMessage.options[nextNodeId] ||
-        nextNodeId.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+      content: formatOptionLabel(nextNodeId),
       timestamp: new Date().toISOString(),
     };
 
@@ -318,7 +325,7 @@ const BusinessEntityChatbot = ({ onClose }) => {
       const aiMessage = {
         id: uuidv4(),
         role: "assistant",
-        content: node.response,
+        content: node.response || "", // Ensure content is string
         timestamp: new Date().toISOString(),
         options: node.options || null,
         url: node.url || null,
@@ -332,9 +339,23 @@ const BusinessEntityChatbot = ({ onClose }) => {
 
   const formatTimestamp = (timestamp) => new Date(timestamp).toLocaleString();
 
+  // Helper to strip markdown from content for plain text download
+  const stripMarkdown = (text) => {
+    if (!text) return "";
+    return text
+      .replace(/\*\*/g, '') // Remove bold **
+      .replace(/\*/g, '') // Remove italic *
+      .replace(/__/g, '') // Remove underline if any
+      .replace(/`[^`]*`/g, (match) => match.slice(1, -1)) // Remove code `
+      .replace(/#{1,6}\s?/g, '') // Remove headers #
+      .replace(/\n\n/g, '\n\n') // Keep paragraph spacing
+      .trim();
+  };
+
   const downloadResponse = (content, nodeId) => {
     if (isFileSaverLoaded && window.saveAs) {
-      const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+      const plainText = stripMarkdown(content);
+      const blob = new Blob([plainText], { type: "text/plain;charset=utf-8" });
       const date = new Date().toISOString().split("T")[0];
       const filename = `BusinessEntityAdvice_${nodeId}_${date}.txt`;
       window.saveAs(blob, filename);
@@ -344,6 +365,10 @@ const BusinessEntityChatbot = ({ onClose }) => {
   };
 
   const MessageBubble = ({ message }) => {
+    if (!message || !message.content) {
+      return null; // Safety check
+    }
+
     // Parse response to extract title, questions, bullet points, and final paragraph
     const lines = message.content.split('\n');
     let title = null;
@@ -355,16 +380,21 @@ const BusinessEntityChatbot = ({ onClose }) => {
       if (!title && line.startsWith('**')) {
         title = line;
       } else if (line.match(/^\d+\./)) {
-        const [_, questionWithNote] = line.split('. ');
-        const [question, note] = questionWithNote.split(' *(');
-        questions.push({ question: question.trim(), note: note ? note.replace(')*', '').trim() : null });
+        const splitIndex = line.indexOf('. ');
+        if (splitIndex !== -1) {
+          const questionWithNote = line.substring(splitIndex + 2);
+          const noteSplit = questionWithNote.split(' *(');
+          const question = noteSplit[0].trim();
+          const note = noteSplit[1] ? noteSplit[1].replace(')*', '').trim() : null;
+          questions.push({ question, note });
+        }
       } else if (line.startsWith('-')) {
         const cleanedLine = line.replace('- ', '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         bulletPoints.push(cleanedLine);
       } else if (line.trim() && !title && questions.length === 0 && bulletPoints.length === 0) {
-        finalParagraph = line.trim();
+        finalParagraph += line.trim() + ' ';
       } else if (line.trim() && (questions.length > 0 || bulletPoints.length > 0)) {
-        finalParagraph = line.trim();
+        finalParagraph += line.trim() + ' ';
       }
     });
 
@@ -392,7 +422,7 @@ const BusinessEntityChatbot = ({ onClose }) => {
             ))}
           </ul>
         )}
-        {finalParagraph && <p>{finalParagraph}</p>}
+        {finalParagraph && <p>{finalParagraph.trim()}</p>}
         {message.role === "assistant" && (
           <button
             className="download-btn"
@@ -410,18 +440,9 @@ const BusinessEntityChatbot = ({ onClose }) => {
                 className="helper-link-button"
                 onClick={() => handleOptionClick(optionId, message)}
                 disabled={visitedNodes.has(optionId)}
-                aria-label={`Explore ${optionId
-                  .replace(/_/g, " ")
-                  .replace(/\b\w/g, (c) => c.toUpperCase())
-                  .replace("Ip", "IP")
-                  .replace("D O", "D&O")}`}
+                aria-label={`Explore ${formatOptionLabel(optionId)}`}
               >
-                {conversationNodes[optionId]?.displayText ||
-                  optionId
-                    .replace(/_/g, " ")
-                    .replace(/\b\w/g, (c) => c.toUpperCase())
-                    .replace("Ip", "IP")
-                    .replace("D O", "D&O")}
+                {formatOptionLabel(optionId)}
               </button>
             ))}
           </div>
@@ -482,17 +503,9 @@ const BusinessEntityChatbot = ({ onClose }) => {
                       })
                     }
                     disabled={visitedNodes.has(optionId)}
-                    aria-label={`Explore ${optionId
-                      .replace(/_/g, " ")
-                      .replace(/\b\w/g, (c) => c.toUpperCase())
-                      .replace("Ip", "IP")
-                      .replace("D O", "D&O")}`}
+                    aria-label={`Explore ${formatOptionLabel(optionId)}`}
                   >
-                    {optionId
-                      .replace(/_/g, " ")
-                      .replace(/\b\w/g, (c) => c.toUpperCase())
-                      .replace("Ip", "IP")
-                      .replace("D O", "D&O")}
+                    {formatOptionLabel(optionId)}
                   </button>
                 ))}
               </div>
